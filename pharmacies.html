@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الصيدليات - طبيبك السودان - 4 صيدليات جاهزة</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{font-family:'Tajawal',sans-serif;box-sizing:border-box;margin:0;padding:0}
+body{background:#f4f8f6;color:#0f2a23;padding:16px}
+.header{background:#0f2a23;color:#fff;padding:16px 20px;border-radius:20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:#fff;border-radius:20px;padding:16px;border:1px solid #e6f2ee;box-shadow:0 4px 12px rgba(0,0,0,.04)}
+.badge{padding:4px 10px;border-radius:100px;font-size:10px;font-weight:800;display:inline-block;margin:2px}
+.badge.green{background:#d1fae5;color:#065f46}
+.badge.blue{background:#dbeafe;color:#1e40af}
+.btn{padding:10px 14px;border-radius:100px;border:none;font-size:12px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;gap:6px;align-items:center;margin:3px}
+.btn.call{background:#0f2a23;color:#fff}
+.btn.wa{background:#25D366;color:#fff}
+.btn.map{background:#fff;border:1.5px solid #e6f2ee;color:#0f2a23}
+.btn.delivery{background:#10A37F;color:#fff;width:100%;justify-content:center;margin-top:10px;padding:12px}
+</style>
+</head>
+<body>
+<div class="header"><div><b style="font-size:18px">💊 صيدليات طبيبك - 4 جاهزة</b><div style="font-size:11px;opacity:.7">توصيل + 24 ساعة - مربوطة سحابيا ✅</div></div><a href="index.html" style="background:rgba(255,255,255,.15);color:#fff;padding:8px 14px;border-radius:100px;font-size:12px;text-decoration:none">🏠 الرئيسية</a></div>
+<div id="loading" style="text-align:center;padding:30px;color:#6b8a81">⏳ جاري تحميل الصيدليات من Supabase...</div>
+<div class="grid" id="grid"></div>
+<div id="empty" style="display:none;text-align:center;padding:30px;color:#9ca3af">لا يوجد صيدليات - شغل ALL-FINAL-SETUP.sql</div>
+<script>
+const SUPABASE_URL='https://dklfjeupbggrvxpjqqqe.supabase.co';
+const SUPABASE_ANON='sb_publishable_lnGtbMJf4P4EeHV6MLoNCA_g67UwiTy';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+async function loadPharmacies(){
+  try{
+    const {data,error}=await supabaseClient.from('pharmacies').select('*').order('rating',{ascending:false});
+    if(error) throw error;
+    document.getElementById('loading').style.display='none';
+    if(!data||data.length===0){ document.getElementById('empty').style.display='block'; return; }
+    document.getElementById('grid').innerHTML=data.map(p=>`
+      <div class="card">
+        <div style="display:flex;justify-content:space-between"><b>💊 ${p.name}</b><span class="badge green">⭐ ${p.rating||4.8}</span></div>
+        <div style="font-size:12px;color:#6b8a81;margin-top:6px">📍 ${p.address||''}</div>
+        <div style="margin-top:8px">${p.available_24h?'<span class="badge blue">🌙 24 ساعة</span>':'<span class="badge" style="background:#ffedd5;color:#9a3412">⏰ نهاري</span>'} ${p.has_delivery?'<span class="badge green">🛵 توصيل</span>':''}</div>
+        <div style="margin-top:12px;display:flex;flex-wrap:wrap"><a class="btn call" href="tel:${p.phone}">📞 ${p.phone||'اتصال'}</a><a class="btn wa" target="_blank" href="https://wa.me/${(p.phone||'').replace(/[^0-9]/g,'')}?text=مرحبا%20${encodeURIComponent(p.name)}%20أريد%20دواء">💬 واتساب</a>${p.location_url?`<a class="btn map" target="_blank" href="${p.location_url}">🗺️ خريطة</a>`:''}</div>
+        ${p.has_delivery?`<button class="btn delivery" onclick="orderFrom('${p.name}','${p.phone}')">🛵 اطلب توصيل من ${p.name.split(' - ')[0]}</button>`:''}
+      </div>
+    `).join('');
+  }catch(e){ document.getElementById('loading').innerHTML=`❌ ${e.message}<br><small>شغل ALL-FINAL-SETUP.sql</small>`; }
+}
+function orderFrom(name,phone){ const msg=encodeURIComponent(`مرحبا ${name} 👋\nأريد طلب دواء عبر طبيبك السودان 💊\n\nالدواء: \nالعنوان: `); window.open(`https://wa.me/${phone.replace(/[^0-9]/g,'')}?text=${msg}`,'_blank'); }
+loadPharmacies();
+</script>
+</body>
+</html>
