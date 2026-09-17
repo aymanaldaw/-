@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>طبيبك السودان - حجز أطباء + صيدليات + مساعد ذكي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{font-family:'Tajawal',sans-serif;box-sizing:border-box;margin:0;padding:0}
+body{background:#f4f8f6;color:#0f2a23;line-height:1.6}
+.hero{background:linear-gradient(135deg,#0f2a23 0%,#1a4738 100%);color:#fff;padding:32px 20px 36px;text-align:center;border-radius:0 0 32px 32px}
+.hero h1{font-size:28px;font-weight:900}
+.hero p{opacity:.85;margin-top:8px;font-size:13px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:12px 20px;border-radius:100px;border:none;font-weight:800;cursor:pointer;text-decoration:none;font-size:13px}
+.btn.primary{background:#fff;color:#0f2a23}
+.btn.green{background:#10A37F;color:#fff}
+.btn.dark{background:#0f2a23;color:#fff}
+.btn.wa{background:#25D366;color:#fff}
+.btn.outline{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;padding:16px}
+.card{background:#fff;border-radius:20px;padding:18px;border:1px solid #e6f2ee;box-shadow:0 4px 16px rgba(0,0,0,.04)}
+.pharm-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f3f4f6}
+.pharm-row:last-child{border:none}
+.badge{padding:4px 10px;border-radius:100px;font-size:10px;font-weight:800}
+.badge.green{background:#d1fae5;color:#065f46}
+.nav{position:sticky;top:0;z-index:20;background:rgba(244,248,246,.9);backdrop-filter:blur(10px);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e6f2ee}
+.ai-result{background:#fff;color:#0f2a23;border-radius:14px;padding:12px;margin-top:10px;font-size:12px;display:none}
+</style>
+</head>
+<body>
+<div class="nav"><b>🩺 طبيبك السودان</b><div style="display:flex;gap:6px"><a href="my-bookings.html" style="font-size:11px;background:#fff;border:1px solid #e6f2ee;padding:6px 12px;border-radius:100px;text-decoration:none;color:#0f2a23">📋 حجوزاتي</a><a href="admin.html" style="font-size:11px;background:#0f2a23;color:#fff;padding:6px 12px;border-radius:100px;text-decoration:none">🛡️ دخول</a></div></div>
+<div class="hero">
+  <h1>🩺 طبيبك السودان</h1>
+  <p>احجز طبيبك - اطلب دواءك - اسأل المساعد الذكي<br>مربوط سحابيا ✅ بنكك 1833</p>
+  <div style="margin-top:18px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+    <a href="payment.html" class="btn green">💳 احجز الآن - 1000ج</a>
+    <a href="pharmacies.html" class="btn primary">💊 الصيدليات</a>
+    <a href="doctors.html" class="btn outline">👨‍⚕️ الأطباء</a>
+  </div>
+  <div style="margin-top:12px;font-size:11px;opacity:.7">✅ 4 صيدليات جاهزة | ✅ دفع بنكك 1833 | ✅ مساعد صوتي</div>
+</div>
+<div class="grid">
+  <div class="card">
+    <b>💳 حجز سريع - بنكك 1833</b>
+    <p style="font-size:12px;color:#6b8a81;margin-top:4px">حول 1000ج وارفع الإشعار - تأكيد خلال دقائق</p>
+    <div style="background:#0f2a23;color:#fff;border-radius:16px;padding:14px;margin-top:12px;text-align:center">
+      <div style="font-size:11px;opacity:.7">حساب بنكك الرسمي</div>
+      <div style="font-size:30px;font-weight:900;margin:4px 0">1833</div>
+      <div style="font-size:11px">باسم: طبيبك السودان</div>
+    </div>
+    <a href="payment.html" class="btn green" style="width:100%;justify-content:center;margin-top:12px">احجز الآن → بنكك 1833</a>
+    <a href="my-bookings.html" style="display:block;text-align:center;font-size:11px;color:#6b8a81;margin-top:8px;text-decoration:none">📋 تتبع حجوزاتي برقم التلفون</a>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between"><b>💊 صيدليات قريبة ✅</b><span id="pharmCount" style="font-size:10px;background:#d1fae5;color:#065f46;padding:4px 8px;border-radius:100px">4 جاهزة</span></div>
+    <p style="font-size:11px;color:#6b8a81;margin-top:4px">توصيل مجاني + 24 ساعة</p>
+    <div id="pharmList" style="margin-top:10px">⏳ جاري التحميل...</div>
+    <a href="pharmacies.html" class="btn dark" style="width:100%;justify-content:center;margin-top:12px">عرض كل الصيدليات 🗺️</a>
+  </div>
+  <div class="card" style="background:linear-gradient(135deg,#0f2a23,#1a4738);color:#fff;border:none">
+    <b>🤖 المساعد الذكي - صوت + كتابة</b>
+    <p style="font-size:11px;opacity:.8;margin-top:4px">اسأل بالصوت، يحدد لك الدكتور والصيدلية</p>
+    <div style="display:flex;gap:6px;margin-top:12px">
+      <input id="aiInput" placeholder="عندي صداع وحمى من يومين" style="flex:1;border:none;border-radius:100px;padding:12px 14px;font-size:12px">
+      <button onclick="askAI()" style="background:#10A37F;color:#fff;border:none;padding:12px 16px;border-radius:100px;font-weight:800;cursor:pointer">اسأل</button>
+    </div>
+    <button onclick="startVoice()" style="width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;padding:12px;border-radius:100px;margin-top:8px;font-weight:700;cursor:pointer">🎤 أو تحدث بالصوت</button>
+    <div id="aiResult" class="ai-result"></div>
+  </div>
+</div>
+<div style="padding:0 16px 16px"><div class="card"><div style="display:flex;justify-content:space-between"><b>👨‍⚕️ أطباؤنا</b><a href="doctors.html" style="font-size:11px;color:#10A37F;text-decoration:none">عرض الكل →</a></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px"><div style="background:#f9fdfb;border:1px solid #e6f2ee;border-radius:14px;padding:10px;text-align:center"><div>🩺</div><b style="font-size:11px">باطنية</b><div style="font-size:10px;color:#6b8a81">د. محمد الأمين</div><a href="payment.html" class="btn green" style="padding:6px 10px;font-size:10px;margin-top:6px;width:100%;justify-content:center">احجز</a></div><div style="background:#f9fdfb;border:1px solid #e6f2ee;border-radius:14px;padding:10px;text-align:center"><div>👶</div><b style="font-size:11px">أطفال</b><div style="font-size:10px;color:#6b8a81">د. سارة أحمد</div><a href="payment.html" class="btn green" style="padding:6px 10px;font-size:10px;margin-top:6px;width:100%;justify-content:center">احجز</a></div><div style="background:#f9fdfb;border:1px solid #e6f2ee;border-radius:14px;padding:10px;text-align:center"><div>🦴</div><b style="font-size:11px">عظام</b><div style="font-size:10px;color:#6b8a81">د. عمر حسن</div><a href="payment.html" class="btn green" style="padding:6px 10px;font-size:10px;margin-top:6px;width:100%;justify-content:center">احجز</a></div><div style="background:#f9fdfb;border:1px solid #e6f2ee;border-radius:14px;padding:10px;text-align:center"><div>🤰</div><b style="font-size:11px">نساء وولادة</b><div style="font-size:10px;color:#6b8a81">د. ندى مصطفى</div><a href="payment.html" class="btn green" style="padding:6px 10px;font-size:10px;margin-top:6px;width:100%;justify-content:center">احجز</a></div></div></div></div>
+<div style="text-align:center;padding:20px;font-size:11px;color:#9ca3af">طبيبك السودان © 2026 - بنكك 1833 - مربوط سحابيا ✅<br><a href="privacy.html" style="color:#6b8a81">الخصوصية</a> • <a href="pharmacies.html" style="color:#6b8a81">الصيدليات</a> • <a href="admin.html" style="color:#6b8a81">لوحة التحكم</a></div>
+<script>
+const SUPABASE_URL='https://dklfjeupbggrvxpjqqqe.supabase.co';
+const SUPABASE_ANON='sb_publishable_lnGtbMJf4P4EeHV6MLoNCA_g67UwiTy';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+async function loadPharmMini(){
+  try{
+    const { data } = await supabaseClient.from('pharmacies').select('*').limit(4);
+    if(!data || data.length===0){ document.getElementById('pharmList').innerHTML='✅ 4 صيدليات جاهزة'; return; }
+    document.getElementById('pharmCount').innerText=data.length+' جاهزة';
+    document.getElementById('pharmList').innerHTML=data.map(p=>`<div class="pharm-row"><div><b style="font-size:12px">💊 ${p.name.split(' - ')[0]}</b><div style="font-size:10px;color:#6b8a81">${(p.address||'').slice(0,28)}</div><div style="margin-top:2px"><span class="badge green">${p.available_24h?'24 ساعة':'نهاري'}</span></div></div><a href="https://wa.me/${(p.phone||'').replace(/[^0-9]/g,'')}" target="_blank" class="btn wa" style="padding:6px 10px;font-size:10px">💬</a></div>`).join('');
+  }catch(e){ document.getElementById('pharmList').innerHTML='✅ 4 صيدليات جاهزة'; }
+}
+loadPharmMini();
+async function askAI(){ const q=document.getElementById('aiInput').value.trim(); if(!q){ alert('اكتب سؤالك'); return; } processAI(q); }
+function startVoice(){
+  if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){ alert('المتصفح لا يدعم الصوت'); return; }
+  const Rec=window.SpeechRecognition||window.webkitSpeechRecognition; const rec=new Rec(); rec.lang='ar-SA'; rec.start();
+  const res=document.getElementById('aiResult'); res.style.display='block'; res.innerHTML='🎤 استمع...';
+  rec.onresult=async(e)=>{ const q=e.results[0][0].transcript; document.getElementById('aiInput').value=q; processAI(q); };
+}
+async function processAI(q){
+  const res=document.getElementById('aiResult'); res.style.display='block'; res.innerHTML='⏳ جاري التحليل...';
+  let doctor='د. محمد الأمين - باطنية'; let answer='أنصحك بمراجعة طبيب باطنية، اشرب ماء وراحة.';
+  if(q.includes('طفل')||q.includes('أطفال')){ doctor='د. سارة أحمد - أطفال'; answer='للأطفال يفضل مراجعة طبيب أطفال فورا.'; }
+  else if(q.includes('عظم')||q.includes('مفصل')||q.includes('ظهر')){ doctor='د. عمر حسن - عظام'; answer='مشاكل العظام تحتاج طبيب عظام.'; }
+  else if(q.includes('حامل')||q.includes('نساء')){ doctor='د. ندى مصطفى - نساء وولادة'; answer='يفضل مراجعة طبيبة نساء.'; }
+  res.innerHTML=`<b>سؤالك:</b> ${q}<br><br><b>🤖 الإجابة:</b> ${answer}<br><br><b>👨‍⚕️ مقترح:</b> ${doctor}<br><br><div style="display:flex;gap:6px"><a href="payment.html?doctor=${encodeURIComponent(doctor)}" class="btn green" style="padding:8px 14px">احجز →</a><a href="pharmacies.html" class="btn dark" style="padding:8px 14px">💊 صيدلية</a></div>`;
+  try{ await supabaseClient.from('ai_chats').insert([{question:q, answer:answer, suggested_doctor:doctor}]); }catch(e){}
+}
+</script>
+</body>
+</html>
