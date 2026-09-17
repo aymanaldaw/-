@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم طبيبك - ULTIMATE - دكاترة + حجوزات + صيدليات + مساعد ذكي + واتساب</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{font-family:'Tajawal',sans-serif;box-sizing:border-box;margin:0;padding:0}
+body{background:#f4f8f6;color:#0f2a23}
+.login-screen{height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f2a23,#1a4738);padding:20px}
+.login-card{background:#fff;border-radius:24px;padding:28px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+.login-card input{width:100%;border:1.5px solid #e6f2ee;border-radius:100px;padding:12px 16px;margin-top:16px;font-size:14px;text-align:center}
+.login-card button{width:100%;background:#0f2a23;color:#fff;border:none;padding:12px;border-radius:100px;margin-top:12px;font-weight:800;cursor:pointer}
+.header{background:#0f2a23;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;flex-wrap:wrap;gap:8px}
+.tabs{display:flex;gap:6px;margin:12px 16px;background:#fff;border-radius:100px;padding:4px;border:1px solid #e6f2ee;width:fit-content;overflow-x:auto}
+.tabs button{padding:8px 14px;border-radius:100px;border:none;background:transparent;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.tabs button.active{background:#0f2a23;color:#fff}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;padding:16px}
+.stat{background:#fff;border-radius:16px;padding:14px;border:1px solid #e6f2ee}
+.stat b{font-size:20px;display:block;margin-top:4px}
+.table-wrap{background:#fff;border-radius:18px;margin:0 16px 16px;border:1px solid #e6f2ee;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:#f9fdfb;padding:10px;text-align:right;font-weight:800;border-bottom:1px solid #e6f2ee;white-space:nowrap}
+td{padding:10px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+.badge{padding:3px 8px;border-radius:100px;font-size:10px;font-weight:800;display:inline-block}
+.badge.pending{background:#fef3c7;color:#92400e}
+.badge.approved{background:#d1fae5;color:#065f46}
+.badge.rejected{background:#fee2e2;color:#991b1b}
+.btn{padding:6px 10px;border-radius:100px;border:none;font-size:10px;font-weight:700;cursor:pointer;margin:2px;display:inline-flex;gap:4px;text-decoration:none;align-items:center}
+.btn.approve{background:#10A37F;color:#fff}
+.btn.reject{background:#fff;border:1px solid #e6f2ee}
+.btn.wa{background:#25D366;color:#fff}
+.btn.view{background:#0f2a23;color:#fff}
+.btn.add{background:#0f2a23;color:#fff;padding:10px 18px;font-size:12px}
+.filter-bar{display:flex;gap:8px;padding:12px 16px;flex-wrap:wrap}
+.filter-bar button{padding:8px 14px;border-radius:100px;border:1px solid #e6f2ee;background:#fff;font-size:12px;cursor:pointer}
+.filter-bar button.active{background:#0f2a23;color:#fff}
+.receipt-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.receipt-modal.open{display:flex}
+.receipt-box{background:#fff;border-radius:18px;padding:16px;max-width:480px;width:100%;max-height:90vh;overflow:auto}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-grid input,.form-grid select{border:1.5px solid #e6f2ee;border-radius:12px;padding:10px;font-size:12px}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div style="width:56px;height:56px;background:#10A37F;border-radius:16px;margin:0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:22px">ط</div>
+    <h2 style="margin-top:12px;font-weight:900">لوحة ULTIMATE 100%</h2>
+    <p style="font-size:11px;color:#6b8a81;margin-top:4px">دكاترة + صيدليات + مساعد ذكي + واتساب ✅</p>
+    <div style="background:#d1fae5;border:1px solid #a7f3d0;padding:8px 12px;border-radius:100px;margin-top:12px;font-size:10px;color:#065f46">🌐 Supabase + 👨‍⚕️💊🤖💬<br>متكامل ULTIMATE</div>
+    <input type="password" id="passInput" placeholder="ayman123 أو 1833">
+    <button onclick="login()">دخول 🔐</button>
+    <div id="loginError" style="color:#ef4444;font-size:11px;margin-top:8px;display:none"></div>
+  </div>
+</div>
+
+<div id="dashboard" style="display:none">
+  <div class="header">
+    <div><b>🛡️ طبيبك - ULTIMATE ✅</b><div style="font-size:10px;opacity:.7" id="mode">Supabase ULTIMATE</div></div>
+    <div style="display:flex;gap:6px">
+      <button onclick="loadAll()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 10px;border-radius:100px;font-size:10px;cursor:pointer">🔄 تحديث</button>
+      <button onclick="logout()" style="background:#ef4444;color:#fff;border:none;padding:6px 10px;border-radius:100px;font-size:10px;cursor:pointer">خروج</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="active" id="tabBookings" onclick="switchTab('bookings')">📋 الحجوزات</button>
+    <button id="tabDoctors" onclick="switchTab('doctors')">👨‍⚕️ الدكاترة</button>
+    <button id="tabPharmacies" onclick="switchTab('pharmacies')">💊 الصيدليات</button>
+    <button id="tabAI" onclick="switchTab('ai')">🤖 المساعد الذكي</button>
+    <button id="tabWA" onclick="switchTab('wa')">💬 واتساب</button>
+  </div>
+
+  <!-- حجوزات -->
+  <div id="viewBookings">
+    <div class="stats">
+      <div class="stat"><div style="font-size:10px;color:#6b8a81">اليوم</div><b id="statToday">0</b></div>
+      <div class="stat"><div style="font-size:10px;color:#6b8a81">معلق</div><b id="statPending">0</b></div>
+      <div class="stat"><div style="font-size:10px;color:#6b8a81">مؤكد</div><b id="statApproved">0</b></div>
+      <div class="stat"><div style="font-size:10px;color:#6b8a81">دكاترة</div><b id="statDoctors">0</b></div>
+      <div class="stat"><div style="font-size:10px;color:#6b8a81">صيدليات</div><b id="statPharmacies">0</b></div>
+      <div class="stat"><div style="font-size:10px;color:#6b8a81">إيراد 1833</div><b id="statMoney">0</b></div>
+    </div>
+    <div class="filter-bar">
+      <button class="active" onclick="filterStatus('all',this)">الكل</button>
+      <button onclick="filterStatus('pending',this)">🟡 معلق</button>
+      <button onclick="filterStatus('approved',this)">🟢 مؤكد</button>
+      <button onclick="exportCSV()" style="background:#10A37F;color:#fff">📥 Excel</button>
+    </div>
+    <div class="table-wrap"><div style="overflow-x:auto"><table><thead><tr><th>التاريخ</th><th>المريض</th><th>التلفون</th><th>الدكتور</th><th>المبلغ</th><th>الإشعار</th><th>الحالة</th><th>واتساب تلقائي</th></tr></thead><tbody id="tbody"></tbody></table></div><div id="empty" style="text-align:center;padding:30px;color:#9ca3af;font-size:13px;display:none">لا يوجد حجوزات</div></div>
+  </div>
+
+  <!-- دكاترة -->
+  <div id="viewDoctors" style="display:none;padding:16px">
+    <div style="background:#fff;border:1px solid #e6f2ee;border-radius:18px;padding:16px;margin-bottom:16px">
+      <h3 style="font-size:13px">➕ إضافة دكتور جديد</h3>
+      <div class="form-grid" style="margin-top:12px">
+        <input id="docName" placeholder="اسم الدكتور">
+        <input id="docSpec" placeholder="التخصص">
+        <input id="docExp" placeholder="الخبرة">
+        <input id="docHosp" placeholder="المستشفى">
+        <select id="docAvatar"><option value="🫀">🫀 باطنية</option><option value="👶">👶 أطفال</option><option value="🦴">🦴 عظام</option><option value="🤰">🤰 نساء</option><option value="🧠">🧠 مخ</option><option value="👁️">👁️ عيون</option><option value="🩺">🩺 عام</option></select>
+        <input id="docPrice" type="number" value="1000">
+      </div>
+      <button class="btn add" onclick="addDoctor()" style="margin-top:12px">➕ إضافة دكتور</button><div id="docMsg" style="font-size:11px;margin-top:8px;display:none"></div>
+    </div>
+    <div class="table-wrap"><div style="overflow-x:auto"><table><thead><tr><th>الدكتور</th><th>التخصص</th><th>المستشفى</th><th>السعر</th><th>إجراءات</th></tr></thead><tbody id="doctorsTbody"></tbody></table></div></div>
+  </div>
+
+  <!-- صيدليات -->
+  <div id="viewPharmacies" style="display:none;padding:16px">
+    <div style="background:#fff;border:1px solid #e6f2ee;border-radius:18px;padding:16px;margin-bottom:16px">
+      <h3 style="font-size:13px">💊 إضافة صيدلية جديدة</h3>
+      <div class="form-grid" style="margin-top:12px">
+        <input id="phName" placeholder="اسم الصيدلية">
+        <input id="phPhone" placeholder="رقم التلفون">
+        <input id="phAddress" placeholder="العنوان - مثال: الخرطوم شارع الحرية" style="grid-column:1/-1">
+        <input id="phLocation" placeholder="رابط الخرائط (اختياري)" style="grid-column:1/-1">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <label style="font-size:11px"><input type="checkbox" id="ph24h" checked> 24 ساعة</label>
+        <label style="font-size:11px"><input type="checkbox" id="phDelivery" checked> توصيل</label>
+      </div>
+      <button class="btn add" onclick="addPharmacy()" style="margin-top:12px">💊 إضافة صيدلية</button><div id="phMsg" style="font-size:11px;margin-top:8px;display:none"></div>
+    </div>
+    <div class="table-wrap"><div style="overflow-x:auto"><table><thead><tr><th>الصيدلية</th><th>العنوان</th><th>التلفون</th><th>24ساعة</th><th>إجراءات</th></tr></thead><tbody id="pharmaciesTbody"></tbody></table></div></div>
+  </div>
+
+  <!-- مساعد ذكي -->
+  <div id="viewAI" style="display:none;padding:16px">
+    <div class="table-wrap"><div style="overflow-x:auto"><table><thead><tr><th>التاريخ</th><th>السؤال</th><th>الإجابة</th><th>الدكتور المقترح</th></tr></thead><tbody id="aiTbody"></tbody></table></div></div>
+  </div>
+
+  <!-- واتساب -->
+  <div id="viewWA" style="display:none;padding:16px">
+    <div style="background:#fff;border:1px solid #e6f2ee;border-radius:18px;padding:16px">
+      <h3>💬 قوالب واتساب تلقائي</h3>
+      <div style="margin-top:12px;display:grid;gap:10px">
+        <div style="background:#f0faf6;border-radius:12px;padding:12px"><b style="font-size:12px">✅ تأكيد</b><br><small id="tplConfirm" style="font-size:11px"></small></div>
+        <div style="background:#fef3c7;border-radius:12px;padding:12px"><b style="font-size:12px">⏰ تذكير</b><br><small id="tplReminder" style="font-size:11px"></small></div>
+        <div style="background:#f0f9ff;border-radius:12px;padding:12px"><b style="font-size:12px">📍 لوكيشن</b><br><small id="tplLocation" style="font-size:11px"></small></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="receipt-modal" id="receiptModal" onclick="if(event.target===this)closeReceipt()">
+  <div class="receipt-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>📸 إشعار بنكك 1833</b><button onclick="closeReceipt()" style="background:#f3f4f6;border:none;width:28px;height:28px;border-radius:100px;cursor:pointer">✕</button></div>
+    <img id="receiptImg" style="width:100%;border-radius:12px;border:1px solid #e6f2ee;display:none">
+    <div id="receiptInfo" style="font-size:12px;line-height:1.7;margin-top:10px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+      <button id="waConfirmBtn" class="btn wa" style="justify-content:center;padding:10px">💬 تأكيد واتساب تلقائي</button>
+      <button onclick="closeReceipt()" class="btn" style="justify-content:center;padding:10px;background:#f3f4f6">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dklfjeupbggrvxpjqqqe.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_lnGtbMJf4P4EeHV6MLoNCA_g67UwiTy';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const WA_TEMPLATES = {
+  confirm: (b) => `مرحبا ${b.patient_name} 👋\n\n✅ تم تأكيد حجزك في طبيبك السودان ULTIMATE\n\n👨‍⚕️ الدكتور: ${b.doctor_name}\n📅 ${new Date(b.created_at).toLocaleDateString('ar-SD')}\n💰 1000ج بنكك 1833 مدفوع ✅\n\n📍 الخرطوم - شارع الحرية\n⏰ الحضور قبل 15 دقيقة\n💊 صيدلية قريبة: شوف صفحة الصيدليات\n\nشكرا 🙏`,
+  reminder: (b) => `تذكير ⏰ ${b.patient_name}\nموعدك مع ${b.doctor_name} بكرة\n📍 الخرطوم\nبانتظارك 🙏`,
+  location: (b) => `📍 لوكيشن طبيبك\nالخرطوم - شارع الحرية\nhttps://maps.google.com/?q=Khartoum\nموعد ${b.patient_name}`,
+};
+function getAllValidPasswords(){ const c=localStorage.getItem('admin_custom_pass'); return [c,'1833','admin123','Ayman123','ayman123'].filter(Boolean); }
+function login(){ const p=document.getElementById('passInput').value.trim(); if(getAllValidPasswords().includes(p)){ document.getElementById('loginScreen').style.display='none'; document.getElementById('dashboard').style.display='block'; localStorage.setItem('admin_logged','true'); loadAll(); loadWATemplates(); }else{ const e=document.getElementById('loginError'); e.innerText='كلمة خاطئة'; e.style.display='block'; } }
+function logout(){localStorage.removeItem('admin_logged');location.reload();}
+if(localStorage.getItem('admin_logged')==='true'){ document.getElementById('loginScreen').style.display='none'; document.getElementById('dashboard').style.display='block'; loadAll(); loadWATemplates(); }
+let allBookings=[], allDoctors=[], allPharmacies=[], currentFilter='all', currentBookingForWA=null;
+function switchTab(tab){ document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active')); document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active'); document.getElementById('viewBookings').style.display=tab==='bookings'?'block':'none'; document.getElementById('viewDoctors').style.display=tab==='doctors'?'block':'none'; document.getElementById('viewPharmacies').style.display=tab==='pharmacies'?'block':'none'; document.getElementById('viewAI').style.display=tab==='ai'?'block':'none'; document.getElementById('viewWA').style.display=tab==='wa'?'block':'none'; if(tab==='doctors') loadDoctors(); if(tab==='pharmacies') loadPharmacies(); if(tab==='ai') loadAI(); if(tab==='bookings') loadBookings(); }
+function loadWATemplates(){ const s={patient_name:'مصطفى', doctor_name:'د. محمد', created_at:new Date().toISOString()}; document.getElementById('tplConfirm').innerText=WA_TEMPLATES.confirm(s); document.getElementById('tplReminder').innerText=WA_TEMPLATES.reminder(s); document.getElementById('tplLocation').innerText=WA_TEMPLATES.location(s); }
+function loadAll(){ loadBookings(); loadDoctors(); loadPharmacies(); loadAI(); }
+async function loadBookings(){ document.getElementById('mode').innerText='⏳ تحميل...'; try{ const { data }=await supabaseClient.from('bookings').select('*').order('created_at',{ascending:false}).limit(200); allBookings=data||[]; document.getElementById('mode').innerText=`✅ ${data.length} حجز - ${allDoctors.length} دكتور - ${allPharmacies.length} صيدلية`; renderBookings(); }catch(e){ document.getElementById('mode').innerText='❌ '+e.message; } }
+async function loadDoctors(){ try{ const { data }=await supabaseClient.from('doctors').select('*').order('created_at'); allDoctors=data||[]; document.getElementById('statDoctors').innerText=allDoctors.length; renderDoctors(); }catch(e){} }
+async function loadPharmacies(){ try{ const { data }=await supabaseClient.from('pharmacies').select('*').order('created_at'); allPharmacies=data||[]; document.getElementById('statPharmacies').innerText=allPharmacies.length; renderPharmacies(); }catch(e){} }
+async function loadAI(){ try{ const { data }=await supabaseClient.from('ai_chats').select('*').order('created_at',{ascending:false}).limit(100); const tbody=document.getElementById('aiTbody'); if(!data||data.length===0){ tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#9ca3af">لا يوجد أسئلة بعد - جرب المساعد الذكي</td></tr>'; return; } tbody.innerHTML=data.map(c=>{ const d=new Date(c.created_at).toLocaleString('ar-SD'); return `<tr><td>${d}</td><td>${c.question||''}</td><td style="max-width:200px">${c.answer||''}</td><td>${c.suggested_doctor||''}</td></tr>`; }).join(''); }catch(e){} }
+function renderBookings(){ const tbody=document.getElementById('tbody'); const empty=document.getElementById('empty'); let f=allBookings; if(currentFilter!=='all') f=allBookings.filter(b=>b.status===currentFilter); const today=new Date().toISOString().split('T')[0]; document.getElementById('statToday').innerText=allBookings.filter(b=>b.created_at?.startsWith(today)).length; document.getElementById('statPending').innerText=allBookings.filter(b=>b.status==='pending').length; document.getElementById('statApproved').innerText=allBookings.filter(b=>b.status==='approved').length; document.getElementById('statMoney').innerText=(allBookings.filter(b=>b.status==='approved').length*1000).toLocaleString(); if(f.length===0){ tbody.innerHTML=''; empty.style.display='block'; return; } empty.style.display='none'; tbody.innerHTML=f.map(b=>{ const date=new Date(b.created_at).toLocaleString('ar-SD',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'}); const sc=b.status==='approved'?'approved':b.status==='rejected'?'rejected':'pending'; const st=b.status==='approved'?'مؤكد':b.status==='rejected'?'مرفوض':'معلق'; const wa=`https://wa.me/${(b.patient_phone||'').replace(/[^0-9]/g,'')}?text=${encodeURIComponent(WA_TEMPLATES.confirm(b))}`; return `<tr><td>${date}</td><td><b>${b.patient_name||'-'}</b></td><td>${b.patient_phone||'-'}</td><td>${b.doctor_name||'-'}</td><td><b>1000ج</b></td><td><button class="btn view" onclick="viewReceipt('${b.receipt_image_url||''}','${b.patient_name||''}','${b.id}')">📸</button></td><td><span class="badge ${sc}">${st}</span></td><td><button class="btn approve" onclick="updateStatusAndWA('${b.id}','approved')">✅ تلقائي</button><a class="btn wa" href="${wa}" target="_blank">💬</a></td></tr>`; }).join(''); }
+function renderDoctors(){ const tbody=document.getElementById('doctorsTbody'); if(!allDoctors||allDoctors.length===0){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px">لا يوجد</td></tr>'; return; } tbody.innerHTML=allDoctors.map(d=>`<tr><td><b>${d.avatar||'🩺'} ${d.name}</b></td><td>${d.specialty}</td><td>${d.hospital||'-'}</td><td>${d.price||1000}ج</td><td><button class="btn reject" onclick="deleteDoctor('${d.id}')">🗑️</button></td></tr>`).join(''); }
+function renderPharmacies(){ const tbody=document.getElementById('pharmaciesTbody'); if(!allPharmacies||allPharmacies.length===0){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px">لا يوجد - شغل ADD-PHARMACIES-AI.sql</td></tr>'; return; } tbody.innerHTML=allPharmacies.map(p=>`<tr><td><b>💊 ${p.name}</b></td><td>${p.address||''}</td><td>${p.phone||''}</td><td>${p.available_24h?'🌙 24س':'☀️ نهاري'}</td><td><button class="btn reject" onclick="deletePharmacy('${p.id}')">🗑️</button></td></tr>`).join(''); }
+async function addDoctor(){ const name=document.getElementById('docName').value.trim(); const spec=document.getElementById('docSpec').value.trim(); if(!name||!spec){ alert('اسم وتخصص'); return; } const { error }=await supabaseClient.from('doctors').insert([{name, specialty:spec, experience:document.getElementById('docExp').value, hospital:document.getElementById('docHosp').value, avatar:document.getElementById('docAvatar').value, price:parseInt(document.getElementById('docPrice').value)||1000}]); if(error){ alert(error.message); return; } loadDoctors(); document.getElementById('docName').value=''; document.getElementById('docSpec').value=''; }
+async function addPharmacy(){ const name=document.getElementById('phName').value.trim(); const phone=document.getElementById('phPhone').value.trim(); if(!name){ alert('اسم الصيدلية'); return; } const { error }=await supabaseClient.from('pharmacies').insert([{name, phone, address:document.getElementById('phAddress').value, location_url:document.getElementById('phLocation').value, available_24h:document.getElementById('ph24h').checked, has_delivery:document.getElementById('phDelivery').checked}]); if(error){ alert(error.message); return; } loadPharmacies(); document.getElementById('phName').value=''; document.getElementById('phPhone').value=''; document.getElementById('phAddress').value=''; }
+async function deleteDoctor(id){ if(!confirm('حذف؟')) return; await supabaseClient.from('doctors').delete().eq('id',id); loadDoctors(); }
+async function deletePharmacy(id){ if(!confirm('حذف الصيدلية؟')) return; await supabaseClient.from('pharmacies').delete().eq('id',id); loadPharmacies(); }
+async function updateStatusAndWA(id,s){ const b=allBookings.find(x=>x.id===id); if(!b) return; const { error }=await supabaseClient.from('bookings').update({status:s}).eq('id',id); if(error){ alert(error.message); return; } const waLink=`https://wa.me/${(b.patient_phone||'').replace(/[^0-9]/g,'')}?text=${encodeURIComponent(WA_TEMPLATES.confirm(b))}`; window.open(waLink,'_blank'); loadBookings(); }
+function filterStatus(s,el){ currentFilter=s; document.querySelectorAll('.filter-bar button').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderBookings(); }
+function viewReceipt(url,name,id){ currentBookingForWA=allBookings.find(b=>b.id===id); document.getElementById('receiptModal').classList.add('open'); const img=document.getElementById('receiptImg'); if(url){ img.src=url; img.style.display='block'; }else{ img.style.display='none'; } document.getElementById('receiptInfo').innerHTML=`<b>${name}</b><br>1000ج بنكك 1833<br><small>${url||''}</small>`; document.getElementById('waConfirmBtn').onclick=function(){ if(!currentBookingForWA) return; const l=`https://wa.me/${(currentBookingForWA.patient_phone||'').replace(/[^0-9]/g,'')}?text=${encodeURIComponent(WA_TEMPLATES.confirm(currentBookingForWA))}`; window.open(l,'_blank'); }; }
+function closeReceipt(){ document.getElementById('receiptModal').classList.remove('open'); }
+function exportCSV(){ if(allBookings.length===0){ alert('لا يوجد'); return; } let csv='التاريخ,الاسم,التلفون,الدكتور,المبلغ,الحالة\n'; allBookings.forEach(b=>{ csv+=`"${b.created_at}","${b.patient_name}","${b.patient_phone}","${b.doctor_name}","1000","${b.status}"\n`; }); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`حجوزات-${new Date().toISOString().split('T')[0]}.csv`; a.click(); }
+</script>
+</body>
+</html>
