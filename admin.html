@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم طبيبك السودان - Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Tajawal',sans-serif;box-sizing:border-box;margin:0;padding:0}
+body{background:#f4f8f6;color:#0f2a23}
+.login-screen{height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f2a23,#1a4738);padding:20px}
+.login-card{background:#fff;border-radius:24px;padding:28px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+.login-card input{width:100%;border:1.5px solid #e6f2ee;border-radius:100px;padding:12px 16px;margin-top:16px;font-size:14px;text-align:center}
+.login-card button{width:100%;background:#0f2a23;color:#fff;border:none;padding:12px;border-radius:100px;margin-top:12px;font-weight:800;cursor:pointer}
+.header{background:#0f2a23;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:16px}
+.stat{background:#fff;border-radius:16px;padding:14px;border:1px solid #e6f2ee}
+.stat b{font-size:22px;display:block;margin-top:4px}
+.table-wrap{background:#fff;border-radius:18px;margin:0 16px 16px;border:1px solid #e6f2ee;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f9fdfb;padding:10px;text-align:right;font-weight:800;border-bottom:1px solid #e6f2ee}
+td{padding:10px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+.badge{padding:3px 8px;border-radius:100px;font-size:10px;font-weight:800;display:inline-block}
+.badge.pending{background:#fef3c7;color:#92400e}
+.badge.approved{background:#d1fae5;color:#065f46}
+.badge.rejected{background:#fee2e2;color:#991b1b}
+.btn{padding:6px 12px;border-radius:100px;border:none;font-size:11px;font-weight:700;cursor:pointer;margin:2px;display:inline-flex;gap:4px;text-decoration:none}
+.btn.approve{background:#10A37F;color:#fff}
+.btn.reject{background:#fff;border:1px solid #e6f2ee}
+.btn.wa{background:#25D366;color:#fff}
+.btn.view{background:#0f2a23;color:#fff}
+.filter-bar{display:flex;gap:8px;padding:12px 16px;flex-wrap:wrap}
+.filter-bar button{padding:8px 14px;border-radius:100px;border:1px solid #e6f2ee;background:#fff;font-size:12px;cursor:pointer}
+.filter-bar button.active{background:#0f2a23;color:#fff}
+.receipt-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.receipt-modal.open{display:flex}
+.receipt-box{background:#fff;border-radius:18px;padding:16px;max-width:420px;width:100%;max-height:90vh;overflow:auto}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div style="width:56px;height:56px;background:#10A37F;border-radius:16px;margin:0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:22px">ط</div>
+    <h2 style="margin-top:12px;font-weight:900">لوحة تحكم طبيبك</h2>
+    <p style="font-size:12px;color:#6b8a81;margin-top:4px">أدخل كلمة المرور للدخول</p>
+    <div style="background:#f0faf6;border:1px solid #c8ddd6;padding:8px 12px;border-radius:100px;margin-top:12px;font-size:11px">🔑 كلمة السر الحالية: <b id="currentPassHint">ayman123</b></div>
+    <input type="password" id="passInput" placeholder="اكتب كلمة السر هنا">
+    <button onclick="login()">دخول 🔐</button>
+    <div id="loginError" style="color:#ef4444;font-size:11px;margin-top:8px;display:none">كلمة مرور خاطئة - جرب ayman123 أو 1833</div>
+    <div style="font-size:10px;color:#9ca3af;margin-top:12px">لو نسيت كلمة السر، افتح change-password.html وغيرها</div>
+  </div>
+</div>
+
+<div id="dashboard" style="display:none">
+  <div class="header">
+    <div><b>🛡️ لوحة تحكم طبيبك السودان</b><div style="font-size:10px;opacity:.7">بنكك 1833 - كل الحجوزات</div></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="exportCSV()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 12px;border-radius:100px;font-size:11px;cursor:pointer">📥 Excel</button>
+      <button onclick="logout()" style="background:#ef4444;color:#fff;border:none;padding:6px 12px;border-radius:100px;font-size:11px;cursor:pointer">خروج</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div style="font-size:11px;color:#6b8a81">اليوم</div><b id="statToday">0</b><div style="font-size:10px;color:#10A37F">حجز</div></div>
+    <div class="stat"><div style="font-size:11px;color:#6b8a81">معلق</div><b id="statPending">0</b><div style="font-size:10px;color:#f59e0b">ينتظر</div></div>
+    <div class="stat"><div style="font-size:11px;color:#6b8a81">مؤكد</div><b id="statApproved">0</b><div style="font-size:10px;color:#10A37F">تم</div></div>
+    <div class="stat"><div style="font-size:11px;color:#6b8a81">المبلغ</div><b id="statMoney">0</b><div style="font-size:10px;color:#0f2a23">جنيه 1833</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="active" onclick="filterStatus('all',this)">الكل</button>
+    <button onclick="filterStatus('pending',this)">🟡 معلق</button>
+    <button onclick="filterStatus('approved',this)">🟢 مؤكد</button>
+    <button onclick="filterStatus('rejected',this)">🔴 مرفوض</button>
+    <button onclick="clearAll()" style="margin-right:auto;background:#fee2e2;color:#991b1b;border-color:#fecaca">🗑️ مسح</button>
+  </div>
+
+  <div class="table-wrap">
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>التاريخ</th><th>المريض</th><th>التلفون</th><th>الدكتور</th><th>الأعراض</th><th>المبلغ</th><th>الإشعار</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="empty" style="text-align:center;padding:30px;color:#9ca3af;font-size:13px;display:none">لا يوجد حجوزات بعد</div>
+  </div>
+</div>
+
+<div class="receipt-modal" id="receiptModal" onclick="if(event.target===this)closeReceipt()">
+  <div class="receipt-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>📸 إشعار بنكك 1833</b><button onclick="closeReceipt()" style="background:#f3f4f6;border:none;width:28px;height:28px;border-radius:100px;cursor:pointer">✕</button></div>
+    <img id="receiptImg" style="width:100%;border-radius:12px;border:1px solid #e6f2ee;display:none">
+    <div id="receiptInfo" style="font-size:12px;line-height:1.7;margin-top:10px"></div>
+  </div>
+</div>
+
+<script>
+// FIXED: يقرأ كلمة السر من التخزين + الكلمات الافتراضية
+function getAllValidPasswords(){
+  const custom = localStorage.getItem('admin_custom_pass');
+  return [custom, '1833', 'admin123', 'Ayman123', 'ayman123'].filter(Boolean);
+}
+
+function updateHint(){
+  const custom = localStorage.getItem('admin_custom_pass');
+  document.getElementById('currentPassHint').innerText = custom || '1833 (افتراضي)';
+}
+updateHint();
+
+function login(){
+  const p=document.getElementById('passInput').value.trim();
+  const valid = getAllValidPasswords();
+  if(valid.includes(p)){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    localStorage.setItem('admin_logged','true');
+    loadBookings();
+  }else{
+    document.getElementById('loginError').style.display='block';
+    document.getElementById('loginError').innerText = `كلمة مرور خاطئة. جرب: ${valid.join(' أو ')}`;
+  }
+}
+function logout(){localStorage.removeItem('admin_logged');location.reload();}
+if(localStorage.getItem('admin_logged')==='true'){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  loadBookings();
+}
+
+let allBookings=[];
+let currentFilter='all';
+
+function loadBookings(){
+  const local = JSON.parse(localStorage.getItem('tabeebak_bookings')||'[]');
+  allBookings = local.map((b,i)=>({id:'local_'+i, ...b, created_at:b.created_at||new Date().toISOString(), status:b.status||'pending'}));
+  render();
+}
+
+function render(){
+  const tbody=document.getElementById('tbody');
+  const empty=document.getElementById('empty');
+  let filtered = allBookings;
+  if(currentFilter!=='all') filtered = allBookings.filter(b=>b.status===currentFilter);
+  
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('statToday').innerText = allBookings.filter(b=>b.created_at?.startsWith(today)).length;
+  document.getElementById('statPending').innerText = allBookings.filter(b=>b.status==='pending').length;
+  document.getElementById('statApproved').innerText = allBookings.filter(b=>b.status==='approved').length;
+  document.getElementById('statMoney').innerText = (allBookings.filter(b=>b.status==='approved').length*1000).toLocaleString();
+
+  if(filtered.length===0){
+    tbody.innerHTML='';
+    empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+  tbody.innerHTML = filtered.map(b=>{
+    const date = new Date(b.created_at).toLocaleString('ar-SD',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'});
+    const statusClass = b.status==='approved'?'approved':b.status==='rejected'?'rejected':'pending';
+    const statusText = b.status==='approved'?'مؤكد':b.status==='rejected'?'مرفوض':'معلق';
+    const waMsg = encodeURIComponent(`مرحبا ${b.patient_name} 👋\n\nتم تأكيد حجزك ✅\n👨‍⚕️ ${b.doctor_name}\n💰 1000ج بنكك 1833 تم الاستلام`);
+    const waLink = `https://wa.me/${(b.patient_phone||'').replace(/[^0-9]/g,'')}?text=${waMsg}`;
+    return `<tr>
+      <td>${date}</td>
+      <td><b>${b.patient_name||'-'}</b></td>
+      <td>${b.patient_phone||'-'}</td>
+      <td>${b.doctor_name||'-'}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${b.symptoms||''}</td>
+      <td><b>1000ج</b></td>
+      <td><button class="btn view" onclick="viewReceipt('${b.receipt_image_url||''}','${b.patient_name||''}')">📸</button></td>
+      <td><span class="badge ${statusClass}">${statusText}</span></td>
+      <td>
+        <button class="btn approve" onclick="updateStatus('${b.id}','approved')">✅</button>
+        <a class="btn wa" href="${waLink}" target="_blank">💬</a>
+        <button class="btn reject" onclick="updateStatus('${b.id}','rejected')">❌</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterStatus(s,el){currentFilter=s;document.querySelectorAll('.filter-bar button').forEach(b=>b.classList.remove('active'));el.classList.add('active');render();}
+function updateStatus(id,newStatus){allBookings = allBookings.map(b=>b.id===id?{...b,status:newStatus}:b);localStorage.setItem('tabeebak_bookings', JSON.stringify(allBookings));render();}
+function viewReceipt(url,name){document.getElementById('receiptModal').classList.add('open');const img=document.getElementById('receiptImg');if(url){img.src=url;img.style.display='block';}else{img.style.display='none';}document.getElementById('receiptInfo').innerHTML=`<b>${name}</b><br>حساب 1833 - 1000ج`;}
+function closeReceipt(){document.getElementById('receiptModal').classList.remove('open');}
+function clearAll(){if(confirm('مسح كل الحجوزات؟')){localStorage.removeItem('tabeebak_bookings');allBookings=[];render();}}
+function exportCSV(){if(allBookings.length===0){alert('لا يوجد');return;}let csv='التاريخ,الاسم,التلفون,الدكتور,المبلغ,الحالة\n';allBookings.forEach(b=>{csv+=`"${b.created_at}","${b.patient_name}","${b.patient_phone}","${b.doctor_name}","1000","${b.status}"\n`;});const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`حجوزات-${new Date().toISOString().split('T')[0]}.csv`;a.click();}
+</script>
+
+</body>
+</html>
