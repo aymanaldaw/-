@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الدفع - بنكك 1833 - مربوط بالصيدليات</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{font-family:'Tajawal',sans-serif;box-sizing:border-box;margin:0;padding:0}
+body{background:#f4f8f6;color:#0f2a23;padding:16px}
+.card{background:#fff;border-radius:20px;padding:20px;max-width:480px;margin:0 auto;border:1px solid #e6f2ee}
+input,textarea,select{width:100%;border:1.5px solid #e6f2ee;border-radius:14px;padding:12px 14px;margin-top:8px;font-size:14px}
+label{font-size:13px;font-weight:700;margin-top:12px;display:block}
+.btn{width:100%;background:#0f2a23;color:#fff;border:none;padding:14px;border-radius:100px;margin-top:16px;font-weight:900;cursor:pointer}
+.btn.green{background:#10A37F}
+.bank-box{background:#0f2a23;color:#fff;border-radius:16px;padding:16px;margin:16px 0;text-align:center}
+.success{background:#d1fae5;border:1px solid #a7f3d0;color:#065f46;padding:14px;border-radius:14px;margin-top:14px;display:none;text-align:center}
+.pharm-suggest{background:#f0faf6;border:1px dashed #a7f3d0;border-radius:14px;padding:12px;margin-top:12px;display:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-weight:900">💳 تأكيد الحجز</h2><a href="index.html" style="font-size:11px;background:#f3f4f6;padding:6px 12px;border-radius:100px;text-decoration:none;color:#0f2a23">🏠 الرئيسية</a></div>
+  <p style="text-align:center;font-size:11px;color:#6b8a81">بنكك 1833 + صيدليات مربوطة ✅</p>
+  <div class="bank-box"><div style="font-size:12px;opacity:.8">حول على بنكك</div><div style="font-size:28px;font-weight:900;margin:6px 0">1833</div><div style="font-size:12px">طبيبك السودان - 1000 جنيه</div></div>
+  <label>👤 اسم المريض</label><input id="name" placeholder="أيمن الداو">
+  <label>📞 رقم الواتساب</label><input id="phone" placeholder="09xxxxxxxx">
+  <label>👨‍⚕️ الدكتور</label><select id="doctor"><option>د. محمد الأمين - باطنية</option><option>د. سارة أحمد - أطفال</option><option>د. عمر حسن - عظام</option><option>د. ندى مصطفى - نساء وولادة</option></select>
+  <label>🤒 الأعراض</label><textarea id="symptoms" rows="3" placeholder="اشرح الأعراض..."></textarea>
+  <label>📸 إشعار بنكك (صورة)</label><input type="file" id="receipt" accept="image/*"><div style="font-size:10px;color:#6b8a81;margin-top:4px">الصورة تتخزن في Supabase تلقائيا - لازم تعمل bucket receipts Public</div>
+  <label>🔢 رقم العملية (اختياري)</label><input id="receipt_no" placeholder="من إشعار بنكك">
+  <button class="btn green" onclick="submitBooking()">✅ تأكيد الحجز - 1000ج بنكك 1833</button>
+  <div id="success" class="success"><b>✅ تم تأكيد الحجز بنجاح!</b><br><small>تم الحفظ سحابيا<br>حنشوفه في لوحة التحكم</small><br><br><div id="pharmSuggest" class="pharm-suggest"></div><br><a href="my-bookings.html" style="background:#0f2a23;color:#fff;padding:8px 14px;border-radius:100px;text-decoration:none;font-size:11px">📋 تتبع حجوزاتي</a> <a href="pharmacies.html" style="background:#10A37F;color:#fff;padding:8px 14px;border-radius:100px;text-decoration:none;font-size:11px">💊 أقرب صيدلية</a></div>
+</div>
+<script>
+const SUPABASE_URL='https://dklfjeupbggrvxpjqqqe.supabase.co';
+const SUPABASE_ANON='sb_publishable_lnGtbMJf4P4EeHV6MLoNCA_g67UwiTy';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+const urlParams=new URLSearchParams(window.location.search);
+const doctorParam=urlParams.get('doctor');
+if(doctorParam){ setTimeout(()=>{ const sel=document.getElementById('doctor'); for(let opt of sel.options){ if(doctorParam.includes(opt.text.split(' - ')[0]) || opt.text.includes(doctorParam)){ sel.value=opt.text; break; } } },300); }
+async function submitBooking(){
+  const name=document.getElementById('name').value.trim();
+  const phone=document.getElementById('phone').value.trim();
+  const doctor=document.getElementById('doctor').value;
+  const symptoms=document.getElementById('symptoms').value.trim();
+  const receiptNo=document.getElementById('receipt_no').value.trim();
+  const file=document.getElementById('receipt').files[0];
+  if(!name||!phone){ alert('دخل الاسم والتلفون'); return; }
+  const btn=document.querySelector('.btn.green'); btn.innerText='⏳ جاري الحفظ...'; btn.disabled=true;
+  let receiptUrl='';
+  try{
+    if(file){
+      const fileName=`${Date.now()}_${file.name}`;
+      const {data,error}=await supabaseClient.storage.from('receipts').upload(fileName,file);
+      if(error) throw error;
+      const {data:urlData}=supabaseClient.storage.from('receipts').getPublicUrl(fileName);
+      receiptUrl=urlData.publicUrl;
+    }
+    const {data,error}=await supabaseClient.from('bookings').insert([{patient_name:name,patient_phone:phone,doctor_name:doctor,symptoms:symptoms,amount:1000,bank_account:'1833',receipt_image_url:receiptUrl,receipt_number:receiptNo,status:'pending'}]).select();
+    if(error) throw error;
+    const local=JSON.parse(localStorage.getItem('tabeebak_bookings')||'[]');
+    local.push({patient_name:name,patient_phone:phone,doctor_name:doctor,symptoms,receipt_image_url:receiptUrl,status:'pending',created_at:new Date().toISOString()});
+    localStorage.setItem('tabeebak_bookings',JSON.stringify(local));
+    document.getElementById('success').style.display='block';
+    btn.innerText='✅ تم الحفظ سحابيا!';
+    loadPharmSuggest();
+    document.getElementById('name').value=''; document.getElementById('phone').value=''; document.getElementById('symptoms').value=''; document.getElementById('receipt_no').value=''; document.getElementById('receipt').value='';
+    window.scrollTo(0,document.body.scrollHeight);
+  }catch(e){
+    alert('خطأ: '+e.message+'\n\nتأكد أنك عملت bucket receipts Public في Supabase Storage');
+    btn.innerText='✅ تأكيد الحجز - 1000ج'; btn.disabled=false;
+  }
+}
+async function loadPharmSuggest(){
+  try{
+    const {data}=await supabaseClient.from('pharmacies').select('*').limit(2);
+    if(!data) return;
+    const box=document.getElementById('pharmSuggest');
+    box.style.display='block';
+    box.innerHTML=`<b>💊 صيدليات مقترحة لطلب دواءك:</b><br><br>`+data.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:8px;border-radius:10px;margin-top:6px"><div style="text-align:right"><b style="font-size:11px">${p.name}</b><div style="font-size:10px;color:#6b8a81">${p.address?.slice(0,25)}</div></div><a href="https://wa.me/${(p.phone||'').replace(/[^0-9]/g,'')}" target="_blank" style="background:#25D366;color:#fff;padding:6px 10px;border-radius:100px;font-size:10px;text-decoration:none">💬 واتساب</a></div>`).join('');
+  }catch(e){}
+}
+</script>
+</body>
+</html>
