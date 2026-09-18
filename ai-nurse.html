@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>الممرضة سارة - إصلاح الصوت</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{font-family:'Tajawal',sans-serif;box-sizing:border-box;margin:0;padding:0}
+body{background:#f0f7f4;min-height:100vh;display:flex;flex-direction:column}
+.header{background:linear-gradient(135deg,#0f2a23,#1a4738);color:#fff;padding:14px 16px;display:flex;gap:10px;align-items:center}
+.avatar{width:44px;height:44px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+.chat{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px;max-width:600px;width:100%;margin:0 auto}
+.msg{max-width:88%;padding:11px 14px;border-radius:18px;font-size:14px;line-height:1.7;animation:s .3s}
+@keyframes s{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.bot{background:#fff;border:1px solid #e6f2ee;border-bottom-right-radius:4px;align-self:flex-start}
+.msg.user{background:#0f2a23;color:#fff;border-bottom-left-radius:4px;align-self:flex-end}
+.msg.warn{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;font-size:12px;align-self:center;text-align:center;border-radius:12px}
+.typing{display:flex;gap:4px;padding:10px 14px;background:#fff;border-radius:18px;width:56px;border:1px solid #e6f2ee}
+.typing span{width:5px;height:5px;background:#10A37F;border-radius:50%;animation:b 1.4s infinite}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes b{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.qbtn{background:#fff;border:1.5px solid #10A37F;color:#0f2a23;padding:7px 12px;border-radius:100px;font-size:11px;font-weight:800;cursor:pointer}
+.qbtn:active{transform:scale(.95)}
+.controls{background:#fff;border-top:1px solid #e6f2ee;padding:10px 12px;position:sticky;bottom:0;max-width:600px;width:100%;margin:0 auto}
+.row{display:flex;gap:8px;align-items:flex-end}
+textarea{flex:1;border:1.5px solid #e6f2ee;border-radius:14px;padding:10px 12px;resize:none;max-height:90px;font-size:14px;outline:none}
+textarea:focus{border-color:#10A37F}
+.btn-mic{width:50px;height:50px;border-radius:50%;border:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0}
+.btn-mic.idle{background:#0f2a23;color:#fff}
+.btn-mic.listen{background:#dc2626;color:#fff;animation:pulse 1s infinite}
+.btn-mic.speak{background:#10A37F;color:#fff}
+.btn-mic:disabled{opacity:.4;cursor:not-allowed}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(220,38,38,.4)}70%{box-shadow:0 0 0 10px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}
+.btn-send{width:50px;height:50px;border-radius:50%;border:none;background:#10A37F;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0}
+.diag{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:10px;margin:8px 0;font-size:11px;color:#475569;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="header">
+<div class="avatar">👩🏾‍⚕️</div>
+<div style="flex:1">
+<div style="font-weight:900;font-size:15px">الممرضة سارة - نسخة مصلحة</div>
+<div id="status" style="font-size:10px;opacity:.85;margin-top:2px">جاري فحص دعم الصوت...</div>
+</div>
+<button id="voiceToggle" onclick="toggleVoice()" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 10px;border-radius:100px;font-size:10px;font-weight:800">🔊 صوت: مفعل</button>
+</div>
+
+<div class="chat" id="chat">
+<div class="msg warn" id="diagBox">🔍 بفحص المتصفح...</div>
+<div class="msg bot">
+أهلاً يا أيمن! 👋 أنا سارة.<br>
+لو المايك ما اشتغل داخل تطبيق فيسبوك، ده طبيعي - التطبيقات الداخلية بتمنع المايك.<br><br>
+<b>الحل السريع:</b>
+<div class="quick">
+<button class="qbtn" onclick="askQuick('عندي صداع شديد')">🤕 صداع</button>
+<button class="qbtn" onclick="askQuick('عندي حمى')">🤒 حمى</button>
+<button class="qbtn" onclick="askQuick('بطني بتوجعني')">🤢 بطن</button>
+<button class="qbtn" onclick="askQuick('عايز أحجز')">📅 حجز</button>
+</div>
+<div style="margin-top:8px;font-size:11px;opacity:.7">💡 جرب الكتابة - أنا برد بصوت حتى لو مايكك ما شغال!</div>
+</div>
+</div>
+
+<div class="controls">
+<div class="row">
+<button class="btn-mic idle" id="micBtn" onclick="toggleListen()">🎙️</button>
+<textarea id="input" rows="1" placeholder="اكتب هنا... مثال: عندي كحة 3 يوم" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"></textarea>
+<button class="btn-send" onclick="send()">➤</button>
+</div>
+<div class="diag" id="helpText">
+💡 <b>ليه الصوت ما شغال؟</b><br>
+1. أنت داخل تطبيق Meta AI / فيسبوك - المتصفح الداخلي يمنع المايك<br>
+2. <b>الحل:</b> افتح الرابط في <b>Chrome</b> خارجي (اضغط 3 نقاط فوق → افتح في المتصفح)<br>
+3. لازم موقع HTTPS (Vercel هو HTTPS ✅)<br>
+4. أول مرة Chrome حيسألك "السماح للمايك" → اضغط Allow<br>
+5. حتى لو المايك ما شغال، <b>أنا برد عليك صوتياً</b> لما تكتب!
+</div>
+</div>
+
+<script>
+let voiceOn=true, listening=false, recog=null;
+const synth=window.speechSynthesis;
+const chat=document.getElementById('chat');
+const statusEl=document.getElementById('status');
+const diagBox=document.getElementById('diagBox');
+const micBtn=document.getElementById('micBtn');
+
+function logDiag(){
+  const isSecure=window.isSecureContext;
+  const hasSR=!!(window.SpeechRecognition||window.webkitSpeechRecognition);
+  const hasSS=!!window.speechSynthesis;
+  const ua=navigator.userAgent;
+  const isInApp=ua.includes('FBAN')||ua.includes('FB_IAB')||ua.includes('Instagram')||ua.includes('MetaAI');
+  
+  let html=`🔍 فحص:<br>
+  - HTTPS: ${isSecure?'✅ آمن':'❌ غير آمن (لازم HTTPS)'}<br>
+  - SpeechRecognition: ${hasSR?'✅ مدعوم':'❌ غير مدعوم في هذا المتصفح'}<br>
+  - SpeechSynthesis (رد صوتي): ${hasSS?'✅ مدعوم':'❌ غير مدعوم'}<br>
+  - داخل تطبيق: ${isInApp?'⚠️ نعم - التطبيقات تمنع المايك':'✅ متصفح خارجي'}<br>`;
+  
+  if(!isSecure) html+=`<br><b>❌ لازم HTTPS:</b> ارفع الموقع على Vercel`;
+  else if(isInApp) html+=`<br><b>⚠️ الحل:</b> افتح الرابط في Chrome - اضغط ⋮ → Open in browser`;
+  else if(!hasSR) html+=`<br><b>❌ متصفحك ما بدعم الصوت:</b> استخدم Chrome Android آخر إصدار`;
+  else html+=`<br><b>✅ كل شيء جاهز!</b> اضغط 🎙️ واتكلم`;
+  
+  diagBox.innerHTML=html;
+  statusEl.textContent= hasSR&&isSecure&&!isInApp ? '● جاهزة - اضغط المايك وتكلم' : '● الكتابة شغالة - الصوت يحتاج Chrome خارجي';
+  
+  if(!hasSR||isInApp){
+    micBtn.disabled=false; // نخليه شغال بس يوري رسالة
+    micBtn.title='افتح في Chrome خارجي';
+  }
+  
+  // جرب تحميل أصوات
+  if(hasSS){
+    setTimeout(()=>{
+      const voices=synth.getVoices();
+      if(voices.length===0) synth.getVoices(); // trigger load
+    },500);
+  }
+}
+
+function toggleVoice(){
+  voiceOn=!voiceOn;
+  document.getElementById('voiceToggle').textContent= voiceOn ? '🔊 صوت: مفعل' : '🔇 صوت: معطل';
+  if(!voiceOn) synth.cancel();
+}
+
+function initRecog(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const r=new SR();
+  r.lang='ar-SA';
+  r.continuous=false;
+  r.interimResults=true;
+  
+  r.onstart=()=>{
+    listening=true;
+    micBtn.classList.remove('idle'); micBtn.classList.add('listen');
+    micBtn.textContent='⏹️';
+    statusEl.textContent='🎧 سامعاك... اتكلم هسا';
+  };
+  r.onresult=(e)=>{
+    let txt='';
+    for(let i=e.resultIndex;i<e.results.length;i++) txt+=e.results[i][0].transcript;
+    document.getElementById('input').value=txt;
+    if(e.results[e.results.length-1].isFinal){
+      setTimeout(()=>send(true),300);
+    }
+  };
+  r.onend=()=>{
+    listening=false;
+    micBtn.classList.remove('listen'); micBtn.classList.add('idle');
+    micBtn.textContent='🎙️';
+    statusEl.textContent='● جاهزة - اضغط المايك وتكلم';
+  };
+  r.onerror=(e)=>{
+    listening=false;
+    micBtn.classList.remove('listen'); micBtn.classList.add('idle');
+    micBtn.textContent='🎙️';
+    let msg='❌ خطأ: '+e.error;
+    if(e.error==='not-allowed') msg='❌ المايك مرفوض - افتح Chrome واضغط Allow للمايك';
+    if(e.error==='no-speech') msg='❌ ما سمعت صوت - قرب المايك وتكلم';
+    if(e.error==='audio-capture') msg='❌ ما لقيت مايك - تأكد المايك شغال';
+    addMsg(msg,'warn');
+    statusEl.textContent=msg;
+  };
+  return r;
+}
+
+function toggleListen(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    addMsg('⚠️ متصفحك داخل فيسبوك/Meta AI ما بدعم المايك.<br><br><b>الحل:</b><br>1. انسخ الرابط<br>2. افتحه في <b>Chrome</b><br>3. حيبقى شغال ✅<br><br>حالياً اكتب سؤالك وأنا برد صوتياً!','warn');
+    return;
+  }
+  if(!window.isSecureContext){
+    addMsg('❌ الصوت يحتاج موقع HTTPS. ارفع الملف على Vercel (هو HTTPS) وحيشتغل.','warn');
+    return;
+  }
+  if(!recog) recog=initRecog();
+  if(listening) recog.stop();
+  else {
+    try{ recog.start(); }catch(err){ addMsg('اضغط مرة تانية - المايك كان شغال','warn'); }
+  }
+}
+
+function speak(text){
+  if(!voiceOn||!synth) return;
+  synth.cancel();
+  const clean=text.replace(/<[^>]*>/g,'').replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}]/gu,'').slice(0,280);
+  const u=new SpeechSynthesisUtterance(clean);
+  u.lang='ar-SA'; u.rate=0.92; u.pitch=1.05; u.volume=1;
+  const voices=synth.getVoices();
+  let v=voices.find(x=>x.lang.startsWith('ar')&&x.name.toLowerCase().includes('female'))||voices.find(x=>x.lang.startsWith('ar'))||null;
+  if(v) u.voice=v;
+  u.onstart=()=>{ micBtn.classList.add('speak'); micBtn.textContent='🔊'; };
+  u.onend=()=>{ micBtn.classList.remove('speak'); if(!listening){ micBtn.classList.add('idle'); micBtn.textContent='🎙️'; } };
+  synth.speak(u);
+}
+
+function addMsg(t,who){
+  const d=document.createElement('div'); d.className='msg '+who; d.innerHTML=t;
+  chat.appendChild(d); chat.scrollTop=chat.scrollHeight;
+}
+function showTyping(){ const d=document.createElement('div'); d.className='typing'; d.id='typing'; d.innerHTML='<span></span><span></span><span></span>'; chat.appendChild(d); chat.scrollTop=chat.scrollHeight; }
+function hideTyping(){ const x=document.getElementById('typing'); if(x) x.remove(); }
+function askQuick(t){ document.getElementById('input').value=t; send(); }
+
+async function send(isVoice=false){
+  const inp=document.getElementById('input'); const q=inp.value.trim(); if(!q) return;
+  inp.value=''; addMsg(q,'user'); showTyping(); await new Promise(r=>setTimeout(r,700));
+  hideTyping();
+  const l=q.toLowerCase();
+  let ans='';
+  if(l.includes('صداع')||l.includes('راسي')) ans=`سلامتك من الصداع! 🤕<br>ليه كم يوم؟ معاه حمى أو زغللة؟ بتنوم كويس؟<br><br><b>نصيحة:</b> موية كتير، قلل تلفون وسهر. لو استمر يومين احجز <b>مخ وأعصاب</b>.<br><br><div class="quick"><button class="qbtn" onclick="askQuick('ليه يومين')">ليه يومين</button><button class="qbtn" onclick="askQuick('معاه حمى')">معاه حمى</button><button class="qbtn" onclick="askQuick('عايز احجز')">احجز</button></div>`;
+  else if(l.includes('حمى')||l.includes('سخانة')) ans=`ألف سلامة من الحمى! 🤒<br>حرارتك كم؟ معاها كحة؟ إسهال؟<br><br><b>اعمل:</b> كمادات فاترة، سوائل كتير.<br>لو فوق 38.5 لازم <b>باطنية</b>.`;
+  else if(l.includes('بطن')||l.includes('مغص')) ans=`سلامة بطنك! 🤢<br>مغص متقطع ولا ثابت؟ أكلت برا؟ في إسهال؟<br><br>وقف أكل تقيل، اشرب محلول جفاف. لو حرارة أو دم امشي طوارئ!`;
+  else if(l.includes('حجز')) ans=`تمام 📅 قول لي التخصص واليوم والأعراض وأنا بجهز الحجز + صيدلية قريبة!`;
+  else ans=`فهمتك: "${q}"<br><br>أنا سارة، بسألك زي الممرضة الحقيقية 🩺<br>احكي الأعراض بدت متين ومعاها شنو؟<br><br><div class="quick"><button class="qbtn" onclick="askQuick('عندي صداع')">صداع</button><button class="qbtn" onclick="askQuick('حمى')">حمى</button><button class="qbtn" onclick="askQuick('كحة')">كحة</button></div>`;
+  
+  addMsg(ans,'bot');
+  speak(ans);
+}
+
+window.addEventListener('load',()=>{
+  logDiag();
+  // تحميل أصوات Chrome
+  if(synth){
+    synth.onvoiceschanged=()=>{ logDiag(); };
+    setTimeout(logDiag,1000);
+  }
+});
+</script>
+</body>
+</html>
